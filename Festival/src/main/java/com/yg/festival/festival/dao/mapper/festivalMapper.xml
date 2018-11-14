@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yg.festival.festival.dao.FestivalDao">
+
+	<sql id="festivalColumns">
+		festival_no, festival_name, festival_detail_intro,
+		festival_detail_fee,
+		festival_detail_parking, festival_detail_time,
+		festival_detail_notice,
+		festival_location_x, festival_location_y,
+		thema1, thema2, thema3, ff_titleimage, fr_starpoint
+	</sql>
+
+	<!-- DB에서 메인 축제정보 전체 불러오기 -->
+	<select id="selectFestivalList" resultType="festivalBean"
+		parameterType="pagingBean">
+		SELECT
+			festival_no, festival_name, festival_detail_intro,
+			festival_detail_fee,
+			festival_detail_parking, festival_detail_time,
+			festival_detail_notice,
+			festival_location_x, festival_location_y,
+			thema1, thema2, thema3
+<!-- 		<include refid="festivalColumns"></include> -->
+		<!-- ( -->
+		<!-- SELECT festival_file.ff_titleimage -->
+		<!-- FROM festival_file -->
+		<!-- WHERE f.festival_no = festival_file.festival_no LIMIT 1 -->
+		<!-- ) AS ff_titleimage -->
+		FROM
+		festival f
+		ORDER BY
+		f.festival_no DESC
+	</select>
+
+	<!-- DB에서 기본 축제정보 전체 불러오기 -->
+	<select id="selectFestivalBasicList" resultType="festivalBasicBean">
+		SELECT
+		fb_no, fb_address, fb_startdate,
+		fb_enddate, fb_org_name, fb_org_phone,
+		fb_org_link, festival_no
+		 
+		FROM
+		festival_basic
+		ORDER BY
+		festival_no DESC
+	</select>
+
+	<!-- DB에서 파일 축제정보 전체 불러오기 -->
+	<select id="selectFestivalFileList" resultType="festivalFileBean">
+		SELECT
+		*
+		FROM
+		festival_file
+		ORDER BY
+		festival_no DESC
+	</select>
+
+	<!-- DB에서 메인 축제정보 한건 불러오기 -->
+	<select id="selectFestival" resultType="festivalBean">
+		SELECT
+			festival_no, festival_name, festival_detail_intro,
+			festival_detail_fee,
+			festival_detail_parking, festival_detail_time,
+			festival_detail_notice,
+			festival_location_x, festival_location_y,
+			thema1, thema2, thema3
+		FROM
+		festival
+		WHERE
+		festival_no = #{festival_no}
+	</select>
+
+	<!-- DB에서 기본 축제정보 한건 불러오기 -->
+	<select id="selectFestivalBasic" resultType="festivalBasicBean">
+		SELECT
+		*
+		FROM
+		festival_basic
+		WHERE
+		1 = 1 AND
+		festival_no = #{festival_no}
+	</select>
+
+	<!-- DB에서 파일 정보를 불러오기 -->
+	<select id="selectFestivalFile" resultType="festivalFileBean">
+		SELECT
+		*
+		FROM
+		festival_file
+		WHERE
+		1 = 1 AND
+		festival_no = #{festival_no}
+	</select>
+
+	<!-- DB에서 지정한 축제 상세페이지 댓글 조회 -->
+	<select id="selectFestivalReply" resultType="festivalReplyBean">
+		SELECT
+			fr_no,
+			fr_content,
+			fr_starpoint,
+			fr_date,
+			fr_member_ideaname,
+			festival_no,
+			member_no AS memberNo
+		FROM
+			festival_reply
+		WHERE
+			festival_no = #{festival_no}
+		ORDER BY
+			fr_no DESC
+	</select>
+	
+	<!-- DB에서 축제정보 전체 갯수 불러오기 -->
+	<select id="selectFestivalCount" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+		festival
+	</select>
+
+	<!-- DB에서 축제 추가하기(FestivalBean) -->
+	<insert id="insertFestival">
+		INSERT INTO
+		festival
+		(
+		festival_name, festival_detail_intro, festival_detail_fee,
+		festival_detail_parking, festival_detail_time, festival_detail_notice,
+		festival_location_x, festival_location_y,
+		thema1, thema2, thema3
+		)
+		VALUE
+		(
+		#{festival_name}, #{festival_detail_intro}, #{festival_detail_fee},
+		#{festival_detail_parking}, #{festival_detail_time},
+		#{festival_detail_notice},
+		#{festival_location_x}, #{festival_location_y},
+		#{thema1}, #{thema2}, #{thema3}
+		)
+	</insert>
+
+	<!-- DB에서 축제 추가하기(FestivalBasicBean) -->
+	<insert id="insertFestivalBasic">
+		INSERT INTO
+		festival_basic
+		(
+		fb_address, fb_startdate, fb_enddate,
+		fb_org_name, fb_org_phone, fb_org_link,
+		festival_no
+		)
+		VALUE
+		(
+		#{fb_address}, #{fb_startdate}, #{fb_enddate},
+		#{fb_org_name}, #{fb_org_phone}, #{fb_org_link},
+		#{festival_no}
+		)
+	</insert>
+
+
+	<!-- DB에서 축제 파일정보 추가하기(FestivalFileBean) -->
+	<insert id="insertFestivalFile">
+		INSERT INTO
+		festival_file
+		(
+		ff_name, ff_titleimage, ff_realpath, ff_path, ff_size, ff_originname,
+		festival_no
+		)
+		VALUE
+		(
+		#{ff_name}, #{ff_titleimage}, #{ff_realpath}, #{ff_path}, #{ff_size},
+		#{ff_originname}, #{festival_no}
+		)
+	</insert>
+
+	<!-- DB에 축제 상세 댓글 추가하기(FestivalReplyBean) -->
+	<insert id="insertFestivalReply">
+		INSERT INTO
+			festival_reply
+		(
+			fr_content, fr_starpoint, 
+			fr_member_ideaname, member_no, festival_no
+		)
+		VALUE
+		(
+			#{fr_content}, #{fr_starpoint},
+			#{fr_member_ideaname}, #{memberNo}, #{festival_no}
+		)
+	</insert>
+	
+	<!-- DB에서 축제 변경하기(FestivalBean) -->
+	<update id="updateFestival">
+		UPDATE festival
+		SET
+		festival_name = #{festival_name},
+		festival_detail_intro = #{festival_detail_intro},
+		festival_detail_fee = #{festival_detail_fee},
+		festival_detail_parking = #{festival_detail_parking},
+		festival_detail_time = #{festival_detail_time},
+		festival_detail_notice = #{festival_detail_notice},
+		festival_location_x = #{festival_location_x},
+		festival_location_y = #{festival_location_y},
+		thema1 = #{thema1},
+		thema2 = #{thema2},
+		thema3 = #{thema3}
+		WHERE
+		festival_no = #{festival_no}
+	</update>
+
+	<!-- DB에서 축제 추가하기(FestivalBasicBean) -->
+	<update id="updateFestivalBasic">
+		UPDATE festival_basic
+		SET
+		fb_address = #{fb_address},
+		fb_startdate = #{fb_startdate},
+		fb_enddate = #{fb_enddate},
+		fb_org_name = #{fb_org_name},
+		fb_org_phone = #{fb_org_phone},
+		fb_org_link = #{fb_org_link}
+		WHERE
+		festival_no = #{festival_no}
+	</update>
+
+	<!-- DB에서 축제 파일 변경하기(FestivalFileBean) -->
+	<update id="updateFestivalFile">
+		UPDATE festival_file
+		SET
+		ff_titleimage = #{ff_titleimage}
+		WHERE
+		ff_no = #{ff_no}
+	</update>
+
+	<!-- DB에서 축제 댓글 수정하기 -->
+	<update id="updateFestivalReply">
+		UPDATE festival_reply
+		SET
+			fr_content = #{fr_content}
+		WHERE
+			fr_no = #{fr_no} AND festival_no = #{festival_no}
+	</update>
+	
+	<!-- DB에서 축제 삭제하기(FestivalBean) -->
+	<delete id="deleteFestival">
+		DELETE FROM
+		festival
+		WHERE
+		festival_no = #{festival_no}
+	</delete>
+
+	<!-- DB에서 축제 삭제하기(FestivalBasicBean) -->
+	<delete id="deleteFestivalBasic">
+		DELETE FROM
+		festival_basic
+		WHERE
+		festival_no = #{festival_no}
+	</delete>
+
+	<!-- DB에서 축제 삭제하기(FestivalFileBean -->
+	<delete id="deleteFestivalFile">
+		DELETE FROM
+		festival_file
+		WHERE
+		festival_no = #{festival_no}
+	</delete>
+
+
+	<!-- DB에서 축제 댓글 삭제하기 -->
+	<delete id="deleteFestivalReply">
+		DELETE FROM
+			festival_reply
+		WHERE
+			festival_no = #{festival_no} AND
+			fr_no = #{fr_no}
+	</delete>
+	<!-- DB에서 축제 댓글 삭제하기 -->
+	<delete id="deleteTotalFestivalReply">
+		DELETE FROM
+			festival_reply
+		WHERE
+			festival_no = #{festival_no}
+			
+	</delete>
+	<!-- 이미지 삭제 -->
+   <delete id="deleteFestivalImage">
+      DELETE FROM
+         festival_file
+      WHERE
+         ff_no = #{ff_no}
+   </delete>
+	<!-- festival List 조회 -->
+	<select id="selectBoardList" resultType="festivalBean"
+		parameterType="pagingBean">
+		SELECT
+			festival_no, festival_name, festival_detail_intro,
+			festival_detail_fee,
+			festival_detail_parking, festival_detail_time,
+			festival_detail_notice,
+			festival_location_x, festival_location_y,
+			thema1, thema2, thema3, ff_titleimage
+		FROM
+			festival
+		WHERE
+		1=1
+		<if test="searchType == 'title'">
+			<!-- member_id를 검색할 값으로 변경 -->
+			AND festival_name like CONCAT('%', #{searchText}, '%')
+		</if>
+		LIMIT #{startRow}, #{endRow}
+	</select>
+
+	<!-- 전체 레코드 갯수 조회 -->
+	<select id="selectBoardListTotalCount" resultType="int"
+		parameterType="pagingBean">
+		SELECT
+		COUNT(*)
+		FROM
+		festival
+	</select>
+	<!-- 게시글 검색 / 현우 -->
+	<select id="searchSelectFestivalList" parameterType="pagingBean"
+		resultType="festivalBean">
+	SELECT
+	festival_no, festival_name, festival_detail_intro,
+	festival_detail_fee,
+	festival_detail_parking, festival_detail_time,
+	festival_detail_notice,
+	festival_location_x, festival_location_y,
+	thema1, thema2, thema3
+	FROM festival WHERE 1=1
+
+	<if test="searchText != null and searchText != '' and searchText != 'null'">
+		AND 
+			(festival_name like CONCAT('%', #{searchText}, '%'))
+	</if>
+		LIMIT #{startRow}, #{endRow}
+	</select>
+
+	<!-- 전체 레코드 갯수 조회 / 현우 -->
+	<select id="selectFestivalListTotalCount" parameterType="pagingBean"
+		resultType="int">
+		SELECT COUNT(*) FROM festival WHERE 1=1
+	<if test="searchText != null and searchText != '' and searchText != 'null'">
+		AND 
+			(festival_name like CONCAT('%', #{searchText}, '%'))
+		</if>
+	</select>
+	
+		<!-- 별점 평균 구하기 / 현우 -->
+	<select id="selectRatingStar"  resultType="festivalReplyBean">
+       SELECT 
+        	 festival_file.ff_titleimage, TRUNCATE(AVG(festival_reply.fr_starpoint), 1), festival_reply.festival_no 
+        from 
+        	festival_reply left JOIN festival_file
+        ON 
+        	festival_reply.festival_no = festival_file.festival_no
+        GROUP BY 
+        	festival_reply.festival_no
+        ORDER BY 
+        	TRUNCATE(AVG(festival_reply.fr_starpoint), 1) DESC
+        LIMIT 5
+	</select>
+	
+	<!-- 재환  Ang paging-->
+	<!-- FestivalBean List 조회 -->
+	<select id="selectFestivalListAng" resultType="festivalBean">
+	    SELECT
+	    	festival_no, festival_name, festival_detail_intro,
+			festival_detail_fee,
+			festival_detail_parking, festival_detail_time,
+			festival_detail_notice,
+			festival_location_x, festival_location_y,
+			thema1, thema2, thema3
+	    FROM
+	    	festival
+	    ORDER BY
+			festival_no DESC
+	    LIMIT #{pagingBean.startRow}, #{pagingBean.endRow}
+	</select>
+	<!-- FestivalBasicBean List 조회 -->
+	<select id="selectFestivalBasicListAng" resultType="festivalBasicBean">
+	    SELECT
+	    	fb_no, fb_address, fb_startdate,
+			fb_enddate, fb_org_name, fb_org_phone,
+			fb_org_link, festival_no
+		 
+	    FROM
+	    	festival_basic
+	    ORDER BY
+			festival_no DESC
+	    LIMIT #{pagingBean.startRow}, #{pagingBean.endRow}
+	</select>
+	<!-- 리스트 전체 갯수 조회 -->
+	<select id="selectFestivalTotalCount" parameterType="pagingBean" resultType="int">
+	    SELECT COUNT(*) FROM festival
+	</select>
+	
+	<!-- 진행중 -->
+   <update id="updateFestivalDate">
+      UPDATE festival
+      SET
+         thema3 = "진행중"
+      WHERE
+         festival_no IN (
+            SELECT festival_no 
+            FROM festival_basic 
+            WHERE date_format(now(),'%Y-%m-%d%') <![CDATA[>=]]> fb_startdate
+            AND date_format(now(),'%Y-%m-%d%') <![CDATA[<=]]> fb_enddate
+         )
+   </update>
+   <!-- 진행완료  -->
+   <update id="updateFestivalEnd">
+      UPDATE festival
+      SET
+         thema3 = "완료"
+      WHERE
+         festival_no IN (
+            SELECT festival_no 
+            FROM festival_basic 
+            WHERE date_format(now(),'%Y-%m-%d%') <![CDATA[>]]> fb_enddate
+            
+         )
+   </update>
+</mapper>

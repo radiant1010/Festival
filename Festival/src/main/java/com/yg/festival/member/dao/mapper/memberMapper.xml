@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yg.festival.member.dao.MemberDao">
+<!--    	<sql id="memberTypeCdId"> -->
+<!-- 		'25' -->
+<!-- 	</sql> -->
+	
+<!-- 	<sql id="categoryCodeId"> -->
+<!-- 	'1' -->
+<!-- 	</sql> -->
+    <sql id="memberColumns">
+        member_no AS memberNo, 
+        member_id AS memberId, 
+        member_pw AS memberPw,
+	    member_name AS memberName, 
+	    member_phone AS memberPhone,
+	    member_age AS memberAge, 
+	    member_gender AS memberGender,
+	    member_admin AS memberAdmin,
+	    token
+    </sql>
+    <!-- 회원가입 -->
+	<insert id="insertMember" parameterType="memberBean" >
+		INSERT INTO
+		member (
+		member_id, 
+        member_pw, 
+        member_name, 
+        member_phone,
+        member_age,
+        member_gender,
+        member_admin
+		) VALUES(
+		#{memberId}, 
+        PASSWORD(#{memberPw}), 
+        #{memberName}, 
+        #{memberPhone},
+        #{memberAge},
+        #{memberGender},
+        #{memberAdmin}
+		)
+<!-- 		<selectKey order="AFTER" keyProperty="memberNo" resultType="string"> -->
+<!--  		    SELECT LAST_INSERT_ID() -->
+<!--  		</selectKey> -->
+	</insert>
+	<!-- 네이버 로그인 회원가입 -->
+	<insert id="insertMemberNaver" parameterType="memberBean">
+		INSERT INTO
+		 	member 
+		 	( member_id, member_pw, member_name, member_gender ) 
+		 VALUES
+		 	( #{memberId}, PASSWORD(#{memberPw}), #{memberName}, #{memberGender} )
+	</insert>
+	<!-- 네이버로그인 -->
+
+
+	<select id="loginNaver" parameterType="memberBean" resultType="int"> 
+	    SELECT COUNT (member_id) 
+	    FROM member 
+	    WHERE 
+	    1=1 
+	    AND member_id = #{memberId} 
+	</select>
+    <!-- 로그인 -->
+	<select id="login" parameterType="memberBean" resultType="int">
+		SELECT
+		COUNT(member_id)
+		FROM member
+		WHERE 1=1
+		AND member_id = #{memberId}
+		AND
+		member_pw = password(#{memberPw})
+	</select>
+	<!-- 로그인 시 회원 정보 가져오기 -->
+	<select id="selectLoginMember" parameterType="memberBean" resultType="memberBean">
+		SELECT
+		<include refid="memberColumns" />
+		FROM member
+		WHERE 1=1
+		<choose>
+			<when test='memberNo != null and memberNo != "" '>
+				AND member_no = #{memberNo}
+			</when>
+			<otherwise>
+				AND member_id = #{memberId}
+				<if test="memberPw != null and memberPw != ''">
+					AND member_pw = password(#{memberPw})
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	<!-- 회원가입 시 회원 정보 가져오기 -->
+	<select id="selectJoinMember" resultType="memberBean" parameterType="memberBean">
+	    SELECT
+	    	<include refid="memberColumns"/>
+	    FROM
+	    	member
+	    WHERE
+  			member_id = #{memberId} 
+	</select>
+	<!-- 회원정보 List 조회 -->
+	<select id="selectMemberList" resultType="memberBean" parameterType="memberBean">
+	    SELECT
+	    	<include refid="memberColumns"/>
+	    FROM
+	    	member
+	</select>
+	
+	<!-- 회원정보 수정 -->
+	<update id="updateMember" parameterType="memberBean">
+		UPDATE member SET
+			member_id = #{memberId}
+			<if test="memberPw != null and memberPw != ''">
+			    ,member_pw = PASSWORD(#{memberPw})
+			</if>
+			<if test="memberName != null and memberName != ''">
+				,member_name = #{memberName}
+			</if>
+			<if test="memberAge != null and memberAge != ''">
+				,member_age = #{memberAge}
+			</if>
+			<if test="memberPhone != null and memberPhone != ''">
+				,member_phone = #{memberPhone}
+			</if>
+			<if test="memberGender != null and memberGender != ''">
+				,member_gender = #{memberGender}
+			</if>
+			<if test="token != null and token != ''">
+				,token = #{token}
+			</if>
+		WHERE
+			member_id = #{memberId}
+	</update>
+	<!-- 회원정보 삭제 -->
+	<delete id="deleteMember" parameterType="memberBean">
+	    DELETE FROM 
+	    	member
+	    WHERE 1=1
+	    AND member_no = #{memberNo}
+	</delete>
+	<!-- id 찾기  -->
+	<select id="selectMemberId" parameterType="memberBean" resultType="memberBean">
+		SELECT member_id as memberId
+		from member
+		where 1=1
+		AND member_phone =
+		#{memberPhone}
+	</select>
+	<!-- pw 찾기 -->
+	<select id="selectMemberPw" parameterType="memberBean" resultType="memberBean">
+		SELECT 
+		<include refid="memberColumns" />
+		from member
+		where 1=1
+		AND member_phone=
+		#{memberPhone}
+		AND member_id =
+		#{memberId}	
+	</select>
+	<!-- id 중복 체크  -->
+	<select id="chkId" parameterType="memberBean" resultType="int">
+		SELECT COUNT(member_id)
+		FROM member
+		WHERE 1=1
+		AND member_id = #{memberId}
+	</select>
+	<!--  토큰 업데이트 -->
+	<update id="updateToken">
+       UPDATE member SET
+          token = #{token}
+         WHERE
+            member_id = #{memberId}
+    </update>
+ 	<!-- 회원정보 리스트  --> 
+<!-- 	<select id="memberList" parameterType="pagingBean" resultType="memberBean"> -->
+<!-- 	SELECT * FROM -->
+<!-- 		(select <include refid="memberColumn"/> -->
+<!-- 		from member -->
+<!-- 		where 1=1 -->
+<!-- 	   	<if test="search != null and search != '' "> -->
+<!-- 		AND member_id like CONCAT('%',#{search},'%')) -->
+<!-- 		</if> -->
+<!-- 		and member_id = #{memberId} -->
+<!-- 		order by member_no desc -->
+<!-- 		) R -->
+<!-- 	WHERE 1=1 -->
+<!-- 	LIMIT #{startRow}, #{COUNT_PER_RECORD} -->
+<!-- 	</select> -->
+</mapper>

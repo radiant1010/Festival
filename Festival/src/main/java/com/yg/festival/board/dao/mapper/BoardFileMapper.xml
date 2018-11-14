@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yg.festival.board.dao.BoardFileDao">
+    
+	<insert id="insertBoardFile" parameterType="boardFileBean">
+	    INSERT INTO board_file
+	    (
+	    	board_no,
+	     	bf_name,
+	     	file_path,
+	     	file_originname,
+	     	file_imgpath
+	     	
+	    )
+	    VALUES
+	    (
+	    	#{boardNo},
+	    	#{bfName},
+	    	#{filePath},
+	    	#{fileOriginName},
+	    	#{fileImgPath}
+	    )
+	</insert>
+	
+	<!-- List 획득 -->
+	<select id="selectBoardFileList" parameterType="boardBean" resultType="boardFileBean">
+		SELECT
+			board_no AS boardNo,
+			bf_name AS bfName,
+			file_path AS filePath,
+			file_originname AS fileOriginName,
+			file_imgpath AS fileImgPath
+		FROM
+			board_file
+		WHERE
+			board_no = #{boardNo}
+	</select>
+	
+	<!-- 업로드 파일 삭제 -->
+	<delete id="deleteBoardFile" parameterType="boardFileBean">
+	    DELETE FROM 
+	    	board_file
+	    WHERE
+	    	board_no = #{boardNo}
+	</delete>
+</mapper>

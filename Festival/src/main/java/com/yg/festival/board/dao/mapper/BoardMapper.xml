@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yg.festival.board.dao.BoardDao">
+    
+    <sql id="boardColumns">
+		board_no AS boardNo,
+		board_title AS boardTitle,
+		board_content AS boardContent,
+		board_date AS boardDate,
+		board_count AS boardCount,
+		board_number AS boardNumber,
+		member_no AS memberNo,
+		
+		(
+			SELECT member.member_name 
+			FROM member 
+			WHERE member.member_no = board.member_no
+		) AS memberName
+		
+    </sql>
+    <!-- 전체 레코드 개수 조회 -->
+	<select id="selectBoardListTotalConut" parameterType="pagingBean" resultType="int">
+		 SELECT 
+		 	count(*) 
+		 FROM 
+		 	board 
+		 WHERE 
+		 	1=1 
+	 			<if test="searchText != null and searchText != '' and searchText != 'null'">
+			  AND (board_Title like CONCAT('%', #{searchText}, '%'))
+			 </if>
+	</select>
+
+	<!-- 게시글 List 조회 -->
+	<select id="selectBoardList" parameterType="pagingBean" resultType="boardBean">
+		SELECT 
+			<include refid="boardColumns"/>
+		FROM 
+			board 
+		WHERE 
+			1=1 
+			<if test="searchText != null and searchText != '' and searchText != 'null'">
+			  AND (board_Title like CONCAT('%', #{searchText}, '%'))  
+			</if>		
+		ORDER BY
+		 
+			board_no DESC 
+		LIMIT 
+			#{startRow},#{endRow}  
+	</select>
+	
+    <!-- 게시글 정보 1건 조회  -->
+    <select id="selectBoard"  parameterType="boardBean" resultType="boardBean">
+	    SELECT
+	    	<include refid="boardColumns"/>
+	    FROM
+	    	board
+	    WHERE
+  			board_no = #{boardNo}
+	</select>
+	
+	<!-- 게시글 전체 조회 -->
+	<select id="selectBoardInfo"  parameterType="boardBean" resultType="boardBean">
+	    SELECT
+	    	<include refid="boardColumns"/>
+	    FROM
+	    	board
+	</select>
+	
+	<!-- 게시글 insert -->
+	<insert id="insertBoard" parameterType="boardBean">
+	    INSERT INTO board
+	    (	
+	    	board_title,
+	    	board_content,
+	    	member_no
+	    )
+	    VALUES
+	    (
+	    	#{boardTitle},
+	    	#{boardContent},
+	    	#{memberNo}
+	    )
+	    <selectKey order="AFTER" keyProperty="boardNo" resultType="string">
+	        SELECT LAST_INSERT_ID()
+	    </selectKey>
+	</insert>
+	
+	<!-- 게시글 update -->
+	<update id="updateBoard" parameterType="boardBean">
+		UPDATE board SET
+			board_title = #{boardTitle},
+			board_content = #{boardContent}
+		WHERE
+			board_no = #{boardNo}
+	</update>
+	
+	<!-- 조회수 update -->
+	<update id="updateBoardJoin" parameterType="boardBean">
+		UPDATE board SET
+			board_count = board_count+1		
+		WHERE
+			board_no = #{boardNo}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<delete id="deleteBoard" parameterType="boardBean">
+	    DELETE FROM 
+	    	board
+	    WHERE
+	    	board_no = #{boardNo}
+	</delete>
+</mapper>

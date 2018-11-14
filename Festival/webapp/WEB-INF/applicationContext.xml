@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+   http://www.springframework.org/schema/beans     
+   http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+   http://www.springframework.org/schema/context 
+   http://www.springframework.org/schema/context/spring-context-4.0.xsd
+   http://www.springframework.org/schema/mvc
+   http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+   http://www.springframework.org/schema/util
+   http://www.springframework.org/schema/util/spring-util-3.0.xsd
+   http://www.springframework.org/schema/aop 
+   http://www.springframework.org/schema/aop/spring-aop.xsd
+   http://www.springframework.org/schema/tx 
+   http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+	<mvc:annotation-driven />
+
+	<context:component-scan base-package="com.yg.festival" />
+	<util:properties id="config" location="classpath:/config.properties" />
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/view/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+<!-- 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"> -->
+<!-- 		<property name="driverClassName" value="org.mariadb.jdbc.Driver" /> -->
+<!-- 		<property name="url" value="jdbc:mariadb://localhost:3307/festival" /> -->
+<!-- 		<property name="username" value="festival" /> -->
+<!-- 		<property name="password" value="festival" /> -->
+<!-- 	</bean> -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="org.mariadb.jdbc.Driver" />
+		<property name="url" value="jdbc:mariadb://localhost:3306/web" />
+		<property name="username" value="root" />
+		<property name="password" value="1234" />
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="/WEB-INF/mybatis-config.xml" />
+		<property name="typeAliasesPackage" value="com.yg.festival" />
+		<property name="mapperLocations"
+			value="classpath*:com/yg/festival/**/dao/mapper/*Mapper.xml" />
+	</bean>
+
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory" />
+	</bean>
+
+	<!-- AOP -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<!-- 이 부분은 모든 메소드에서 Exception이 발생하였을 경우 무조건 롤백 하도록 설정하였다. -->
+			<tx:method name="*" rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- aop를 사용하여 com.yg.festival.기능명.service 패키지내 기능명ServiceImpl의 모든 메소드에 
+		대해 트랜잭션을 사용하도록 설정. -->
+	<aop:config>
+		<aop:pointcut id="txPointcut"
+			expression="execution(* com.yg.festival.*.service.*ServiceImpl.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut" />
+	</aop:config>
+
+	<!-- dao 스캔 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.yg.festival.**.dao" />
+	</bean>
+
+	<!-- MultipartResolver 설정 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="100000000" />
+		<property name="maxInMemorySize" value="100000000" />
+	</bean>
+	
+	<mvc:interceptors>
+		<mvc:interceptor>
+	        <mvc:mapping path="/festival/*master*"/>
+	        <mvc:mapping path="/member/*memberList*"/>
+	        <bean class="com.yg.festival.common.SessionManagerInterceptor" />
+	    </mvc:interceptor>
+<!-- 	    화면 인터셉터 -->
+	    <mvc:interceptor>
+	        <mvc:mapping path="/board/*"/>
+	        <mvc:exclude-mapping path="/board/*List*" />
+	        <mvc:exclude-mapping path="/board/*View*" />
+	        <bean class="com.yg.festival.common.SessionInterceptor" />
+	    </mvc:interceptor>
+	</mvc:interceptors>
+	
+	
+</beans>
